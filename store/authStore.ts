@@ -43,6 +43,8 @@ export const useAuthStore = create<AuthState>()(
           if (error) throw error;
 
           if (data.user && data.session) {
+            // Note: User creation in database will happen in account-setup.tsx
+            // after the user completes the profile setup
             set({
               user: data.user,
               session: data.session,
@@ -125,7 +127,6 @@ export const useAuthStore = create<AuthState>()(
           // Update user record in profiles table
           const profileUpdates: any = {};
           if (updates.name) profileUpdates.name = updates.name;
-          if (updates.username) profileUpdates.username = updates.username;
           if (updates.bio) profileUpdates.bio = updates.bio;
           if (updates.avatar) profileUpdates.avatar = updates.avatar;
 

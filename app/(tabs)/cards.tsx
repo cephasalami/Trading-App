@@ -1,18 +1,21 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useProfileStore } from '@/store/profileStore';
-import colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import ProfileCard from '@/components/ProfileCard';
 import EmptyState from '@/components/EmptyState';
 import { useRouter } from 'expo-router';
-import { Plus, Crown, UserPlus } from 'lucide-react-native';
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 import { shareProfile, generateQRCodeUrl } from '@/lib/sharing';
 
+import { ErrorState } from '@/components/EmptyState';
+
 export default function CardsScreen() {
   const router = useRouter();
-  const { profiles, activeProfileId, setActiveProfile } = useProfileStore();
+  const colors = useTheme();
+  const { profiles, activeProfileId, setActiveProfile, isLoading, error, loadProfiles } = useProfileStore();
   
   const activeProfile = profiles.find(p => p.id === activeProfileId);
   
@@ -51,46 +54,56 @@ export default function CardsScreen() {
       });
     }
   };
+
+  if (isLoading) {
+    return <Text>Loading profiles...</Text>;
+  }
+
+  if (error) {
+    return <ErrorState message={error} onRetry={loadProfiles} />;
+  }
   
   if (!activeProfile) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         <EmptyState
           title="Create Your Digital Card"
           description="Start by creating your first digital business card to share with your network."
           actionLabel="Create Card"
           onAction={handleCreateProfile}
-          icon={<UserPlus size={40} color={colors.primary} />}
+          icon={<MaterialCommunityIcons name="account-plus" size={40} color={colors.primary} />}
         />
       </View>
     );
   }
   
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Personal Card</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Personal Card</Text>
           <ProfileCard profile={activeProfile} isPreview onShare={handleShareProfile} />
         </View>
         
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>All Cards</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>All Cards</Text>
           
-          <View style={styles.cardsList}>
+          <View style={[styles.cardsList, { backgroundColor: colors.card, borderColor: colors.border }]}>
             {profiles.map(profile => (
               <TouchableOpacity
                 key={profile.id}
                 style={[
                   styles.cardItem,
-                  profile.id === activeProfileId && styles.activeCardItem
+                  { borderBottomColor: colors.border },
+                  profile.id === activeProfileId && { backgroundColor: colors.lightGray }
                 ]}
                 onPress={() => handleSwitchProfile(profile.id)}
               >
                 <Text 
                   style={[
                     styles.cardName,
-                    profile.id === activeProfileId && styles.activeCardName
+                    { color: colors.text },
+                    profile.id === activeProfileId && { color: colors.primary }
                   ]}
                   numberOfLines={1}
                 >
@@ -98,15 +111,15 @@ export default function CardsScreen() {
                 </Text>
                 {profile.contactInfo.company && (
                   <Text 
-                    style={styles.cardCompany}
+                    style={[styles.cardCompany, { color: colors.textSecondary }]}
                     numberOfLines={1}
                   >
                     {profile.contactInfo.company}
                   </Text>
                 )}
                 {profile.id === activeProfileId && (
-                  <View style={styles.activeIndicator}>
-                    <Text style={styles.activeText}>Active</Text>
+                  <View style={[styles.activeIndicator, { backgroundColor: colors.primary }]}>
+                    <Text style={[styles.activeText, { color: colors.card }]}>Active</Text>
                   </View>
                 )}
               </TouchableOpacity>
@@ -115,37 +128,41 @@ export default function CardsScreen() {
         </View>
         
         <TouchableOpacity 
-          style={styles.createCardButton}
+          style={[styles.createCardButton, { backgroundColor: colors.card, borderColor: colors.border }]}
           onPress={handleCreateProfile}
         >
-          <View style={styles.createCardIcon}>
-            <Plus size={24} color={colors.primary} />
+          <View style={[styles.createCardIcon, { backgroundColor: colors.lightGray }]}>
+            <MaterialCommunityIcons name="plus" size={24} color={colors.primary} />
           </View>
           <View style={styles.createCardContent}>
-            <Text style={styles.createCardTitle}>Create Another Card</Text>
-            <Text style={styles.createCardSubtitle}>Add a new digital business card</Text>
+            <Text style={[styles.createCardTitle, { color: colors.text }]}>Create Another Card</Text>
+            <Text style={[styles.createCardSubtitle, { color: colors.textSecondary }]}>Add a new digital business card</Text>
           </View>
         </TouchableOpacity>
         
         <View style={styles.premiumSection}>
           <TouchableOpacity 
-            style={styles.premiumCard}
+            style={[styles.premiumCard, { backgroundColor: colors.card }]}
             onPress={handleGoPremium}
           >
             <View style={styles.premiumHeader}>
-              <Crown size={24} color="#FFD700" />
-              <Text style={styles.premiumTitle}>Join Tapping Premium</Text>
+              <MaterialCommunityIcons name="crown" size={24} color="#FFD700" />
+              <Text style={[styles.premiumTitle, { color: colors.text }]}>Join Tapping Premium</Text>
             </View>
-            <Text style={styles.premiumDescription}>
-              • Create up to 3 business cards{'\n'}
-              • Advanced customization options{'\n'}
-              • Analytics and insights{'\n'}
-              • Remove branding{'\n'}
+            <Text style={[styles.premiumDescription, { color: colors.textSecondary }]}>
+              • Create up to 3 business cards{'
+'}
+              • Advanced customization options{'
+'}
+              • Analytics and insights{'
+'}
+              • Remove branding{'
+'}
               • Priority support
             </Text>
             <View style={styles.premiumPricing}>
               <Text style={styles.premiumPrice}>€4.99/month</Text>
-              <Text style={styles.premiumSave}>Save €15 with yearly plan</Text>
+              <Text style={[styles.premiumSave, { color: colors.textSecondary }]}>Save €15 with yearly plan</Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -157,7 +174,6 @@ export default function CardsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
   },
   scrollView: {
     flex: 1,
@@ -172,59 +188,42 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600' as const,
-    color: '#FFFFFF',
     marginBottom: 12,
   },
   cardsList: {
-    backgroundColor: 'rgba(26, 26, 26, 0.8)',
     borderWidth: 1,
-    borderColor: '#2C2C2C',
     borderRadius: 16,
     overflow: 'hidden',
   },
   cardItem: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#2C2C2C',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  activeCardItem: {
-    backgroundColor: 'rgba(44, 44, 44, 0.8)',
-  },
   cardName: {
     fontSize: 16,
     fontWeight: '500' as const,
-    color: '#FFFFFF',
     flex: 1,
-  },
-  activeCardName: {
-    color: colors.primary,
-    fontWeight: '600' as const,
   },
   cardCompany: {
     fontSize: 14,
-    color: '#CCCCCC',
     marginTop: 2,
   },
   activeIndicator: {
-    backgroundColor: colors.primary,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
   },
   activeText: {
     fontSize: 12,
-    color: '#FFFFFF',
     fontWeight: '600' as const,
   },
   createCardButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(26, 26, 26, 0.8)',
     borderWidth: 1,
-    borderColor: '#2C2C2C',
     borderRadius: 16,
     padding: 20,
     marginBottom: 24,
@@ -233,7 +232,6 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: 'rgba(44, 44, 44, 0.8)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
@@ -244,18 +242,15 @@ const styles = StyleSheet.create({
   createCardTitle: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#FFFFFF',
     marginBottom: 4,
   },
   createCardSubtitle: {
     fontSize: 14,
-    color: '#CCCCCC',
   },
   premiumSection: {
     marginTop: 8,
   },
   premiumCard: {
-    backgroundColor: 'rgba(26, 26, 26, 0.8)',
     borderWidth: 1,
     borderColor: '#FFD700',
     borderRadius: 16,
@@ -269,12 +264,10 @@ const styles = StyleSheet.create({
   premiumTitle: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#FFFFFF',
     marginLeft: 8,
   },
   premiumDescription: {
     fontSize: 14,
-    color: '#CCCCCC',
     lineHeight: 20,
     marginBottom: 16,
   },
@@ -290,6 +283,5 @@ const styles = StyleSheet.create({
   },
   premiumSave: {
     fontSize: 12,
-    color: '#CCCCCC',
   },
 });

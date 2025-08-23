@@ -1,10 +1,9 @@
 import { Dimensions } from 'react-native';
-import colors from './colors';
+
 
 const { width, height } = Dimensions.get('window');
 
 export default {
-  colors,
   spacing: {
     xs: 4,
     s: 8,

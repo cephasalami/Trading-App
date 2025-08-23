@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { useContactsStore } from '@/store/contactsStore';
-import colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import ContactListItem from '@/components/ContactListItem';
 import EmptyState from '@/components/EmptyState';
-import { Search, UserPlus, QrCode, Upload, Crown } from 'lucide-react-native';
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 
+import { ErrorState } from '@/components/EmptyState';
+
 export default function ContactsScreen() {
   const router = useRouter();
-  const { contacts, loadContacts, isLoading } = useContactsStore();
+  const colors = useTheme();
+  const { contacts, loadContacts, isLoading, error } = useContactsStore();
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -41,31 +44,39 @@ export default function ContactsScreen() {
     }
     Alert.alert('Premium Feature', 'Export contacts to CSV or integrate with CRM systems with Tapping Premium.');
   };
+
+  if (isLoading) {
+    return <Text>Loading contacts...</Text>;
+  }
+
+  if (error) {
+    return <ErrorState message={error} onRetry={loadContacts} />;
+  }
   
   if (contacts.length === 0) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.actionsContainer}>
           <TouchableOpacity 
-            style={styles.actionCard}
+            style={[styles.actionCard, { backgroundColor: colors.card, borderColor: colors.border }]}
             onPress={handleScanContact}
           >
-            <View style={styles.actionIcon}>
-              <QrCode size={32} color={colors.primary} />
+            <View style={[styles.actionIcon, { backgroundColor: colors.lightGray }]}>
+              <MaterialCommunityIcons name="qrcode" size={32} color={colors.primary} />
             </View>
-            <Text style={styles.actionTitle}>Scan QR Code</Text>
-            <Text style={styles.actionSubtitle}>Scan a digital business card</Text>
+            <Text style={[styles.actionTitle, { color: colors.text }]}>Scan QR Code</Text>
+            <Text style={[styles.actionSubtitle, { color: colors.textSecondary }]}>Scan a digital business card</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
-            style={styles.actionCard}
+            style={[styles.actionCard, { backgroundColor: colors.card, borderColor: colors.border }]}
             onPress={handleScanContact}
           >
-            <View style={styles.actionIcon}>
-              <Upload size={32} color={colors.primary} />
+            <View style={[styles.actionIcon, { backgroundColor: colors.lightGray }]}>
+              <MaterialCommunityIcons name="upload" size={32} color={colors.primary} />
             </View>
-            <Text style={styles.actionTitle}>Scan Paper Card</Text>
-            <Text style={styles.actionSubtitle}>Import from physical card</Text>
+            <Text style={[styles.actionTitle, { color: colors.text }]}>Scan Paper Card</Text>
+            <Text style={[styles.actionSubtitle, { color: colors.textSecondary }]}>Import from physical card</Text>
           </TouchableOpacity>
         </View>
         
@@ -74,21 +85,21 @@ export default function ContactsScreen() {
           description="Scan a QR code or business card to add your first contact."
           actionLabel="Scan Contact"
           onAction={handleScanContact}
-          icon={<UserPlus size={40} color={colors.primary} />}
+          icon={<MaterialCommunityIcons name="account-plus" size={40} color={colors.primary} />}
         />
       </View>
     );
   }
   
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
-        <View style={styles.searchContainer}>
-          <Search size={20} color="#CCCCCC" />
+        <View style={[styles.searchContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <MaterialCommunityIcons name="magnify" size={20} color={colors.textSecondary} />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: colors.text }]}
             placeholder="Search contacts..."
-            placeholderTextColor="#CCCCCC"
+            placeholderTextColor={colors.textSecondary}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
@@ -96,18 +107,26 @@ export default function ContactsScreen() {
         
         <View style={styles.actionsRow}>
           <TouchableOpacity 
-            style={styles.smallActionButton}
+            style={[styles.smallActionButton, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={() => router.push('/contacts/add')}
+          >
+            <MaterialCommunityIcons name="account-plus" size={20} color={colors.primary} />
+            <Text style={[styles.smallActionText, { color: colors.text }]}>Add</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.smallActionButton, { backgroundColor: colors.card, borderColor: colors.border }]}
             onPress={handleScanContact}
           >
-            <QrCode size={20} color={colors.primary} />
-            <Text style={styles.smallActionText}>Scan</Text>
+            <MaterialCommunityIcons name="qrcode" size={20} color={colors.primary} />
+            <Text style={[styles.smallActionText, { color: colors.text }]}>Scan</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
             style={[styles.smallActionButton, styles.premiumButton]}
             onPress={handleExportContacts}
           >
-            <Crown size={16} color="#FFD700" />
+            <MaterialCommunityIcons name="crown" size={16} color="#FFD700" />
             <Text style={[styles.smallActionText, styles.premiumText]}>Export</Text>
           </TouchableOpacity>
         </View>
@@ -117,13 +136,17 @@ export default function ContactsScreen() {
         <FlatList
           data={filteredContacts}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <ContactListItem contact={item} />}
+          renderItem={({ item }) => (
+          <TouchableOpacity onPress={() => router.push(`/contacts/${item.id}`)}>
+            <ContactListItem contact={item} />
+          </TouchableOpacity>
+        )}
           contentContainerStyle={styles.listContent}
           style={styles.list}
         />
       ) : (
         <View style={styles.noResults}>
-          <Text style={styles.noResultsText}>No contacts found matching "{searchQuery}"</Text>
+          <Text style={[styles.noResultsText, { color: colors.textSecondary }]}>No contacts found matching "{searchQuery}"</Text>
         </View>
       )}
     </View>
@@ -133,7 +156,6 @@ export default function ContactsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
   },
   header: {
     padding: 16,
@@ -142,9 +164,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(26, 26, 26, 0.8)',
     borderWidth: 1,
-    borderColor: '#2C2C2C',
     borderRadius: 16,
     paddingHorizontal: 16,
     height: 50,
@@ -153,7 +173,6 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#FFFFFF',
     marginLeft: 12,
   },
   actionsRow: {
@@ -163,9 +182,7 @@ const styles = StyleSheet.create({
   smallActionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(26, 26, 26, 0.8)',
     borderWidth: 1,
-    borderColor: '#2C2C2C',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -177,7 +194,6 @@ const styles = StyleSheet.create({
   },
   smallActionText: {
     fontSize: 14,
-    color: '#FFFFFF',
     fontWeight: '500' as const,
   },
   premiumText: {
@@ -190,9 +206,7 @@ const styles = StyleSheet.create({
   },
   actionCard: {
     flex: 1,
-    backgroundColor: 'rgba(26, 26, 26, 0.8)',
     borderWidth: 1,
-    borderColor: '#2C2C2C',
     borderRadius: 16,
     padding: 20,
     alignItems: 'center',
@@ -201,7 +215,6 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(44, 44, 44, 0.8)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
@@ -209,13 +222,11 @@ const styles = StyleSheet.create({
   actionTitle: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#FFFFFF',
     marginBottom: 4,
     textAlign: 'center',
   },
   actionSubtitle: {
     fontSize: 12,
-    color: '#CCCCCC',
     textAlign: 'center',
   },
   list: {
@@ -232,7 +243,6 @@ const styles = StyleSheet.create({
   },
   noResultsText: {
     fontSize: 16,
-    color: '#CCCCCC',
     textAlign: 'center',
   },
 });

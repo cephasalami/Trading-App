@@ -1,14 +1,14 @@
 import React from 'react';
-import { 
-  TouchableOpacity, 
-  Text, 
-  StyleSheet, 
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
   ActivityIndicator,
   ViewStyle,
-  TextStyle
+  TextStyle,
 } from 'react-native';
-import colors from '@/constants/colors';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTheme } from '../hooks/useTheme';
 
 interface ButtonProps {
   title: string;
@@ -33,34 +33,86 @@ export default function Button({
   style,
   textStyle,
   icon,
-  iconPosition = 'left'
+  iconPosition = 'left',
 }: ButtonProps) {
+  const colors = useTheme();
+
+  const getVariantStyles = () => {
+    switch (variant) {
+      case 'primary':
+        return {
+          button: { backgroundColor: colors.primary },
+          text: { color: colors.card },
+        };
+      case 'secondary':
+        return {
+          button: { backgroundColor: colors.secondary },
+          text: { color: colors.card },
+        };
+      case 'outline':
+        return {
+          button: {
+            backgroundColor: 'transparent',
+            borderWidth: 1,
+            borderColor: colors.primary,
+          },
+          text: { color: colors.primary },
+        };
+      case 'text':
+        return {
+          button: { backgroundColor: 'transparent', paddingHorizontal: 0 },
+          text: { color: colors.primary },
+        };
+      default:
+        return {};
+    }
+  };
+
+  const sizeStyles = {
+    small: {
+      button: { paddingVertical: 8, paddingHorizontal: 16 },
+      text: { fontSize: 14 },
+    },
+    medium: {
+      button: { paddingVertical: 12, paddingHorizontal: 24 },
+      text: { fontSize: 16 },
+    },
+    large: {
+      button: { paddingVertical: 16, paddingHorizontal: 32 },
+      text: { fontSize: 18 },
+    },
+  };
+
   const buttonStyles = [
     styles.button,
-    styles[size],
-    variant !== 'gradient' && styles[variant],
+    sizeStyles[size].button,
+    variant !== 'gradient' && getVariantStyles().button,
     disabled && styles.disabled,
-    style
+    style,
   ];
-  
+
   const textStyles = [
     styles.buttonText,
-    styles[`${variant}Text`],
-    styles[`${size}Text`],
+    sizeStyles[size].text,
+    variant !== 'gradient' && getVariantStyles().text,
     disabled && styles.disabledText,
-    textStyle
+    textStyle,
   ];
-  
+
   const renderButtonContent = () => {
     if (loading) {
       return (
-        <ActivityIndicator 
-          color={variant === 'outline' || variant === 'text' ? colors.primary : 'white'} 
-          size="small" 
+        <ActivityIndicator
+          color={
+            variant === 'outline' || variant === 'text'
+              ? colors.primary
+              : colors.card
+          }
+          size="small"
         />
       );
     }
-    
+
     return (
       <>
         {icon && iconPosition === 'left' && icon}
@@ -69,7 +121,7 @@ export default function Button({
       </>
     );
   };
-  
+
   if (variant === 'gradient') {
     return (
       <TouchableOpacity
@@ -82,14 +134,14 @@ export default function Button({
           colors={[colors.primary, colors.secondary]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          style={[styles.button, styles[size], styles.gradientButton]}
+          style={[styles.button, sizeStyles[size].button, styles.gradientButton]}
         >
           {renderButtonContent()}
         </LinearGradient>
       </TouchableOpacity>
     );
   }
-  
+
   return (
     <TouchableOpacity
       style={buttonStyles}
@@ -110,73 +162,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
   },
-  
-  // Variants
-  primary: {
-    backgroundColor: colors.primary,
-  },
-  secondary: {
-    backgroundColor: colors.secondary,
-  },
-  outline: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: colors.primary,
-  },
-  text: {
-    backgroundColor: 'transparent',
-    paddingHorizontal: 0,
-  },
   gradientButton: {
     borderRadius: 12,
   },
-  
-  // Sizes
-  small: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-  },
-  medium: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-  },
-  large: {
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-  },
-  
-  // Text styles
   buttonText: {
     fontWeight: '600',
   },
-  primaryText: {
-    color: 'white',
-  },
-  secondaryText: {
-    color: 'white',
-  },
-  outlineText: {
-    color: colors.primary,
-  },
-  textText: {
-    color: colors.primary,
-  },
-  gradientText: {
-    color: 'white',
-  },
-  
-  // Text sizes
-  smallText: {
-    fontSize: 14,
-  },
-  mediumText: {
-    fontSize: 16,
-  },
-  largeText: {
-    fontSize: 18,
-  },
-  
-  // Disabled state
   disabled: {
     opacity: 0.5,
   },

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import colors from '@/constants/colors';
 import Button from './Button';
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 interface EmptyStateProps {
   title: string;
@@ -37,6 +38,29 @@ export default function EmptyState({
           style={styles.button}
         />
       )}
+    </View>
+  );
+}
+
+interface ErrorStateProps {
+  message: string;
+  onRetry: () => void;
+}
+
+export function ErrorState({ message, onRetry }: ErrorStateProps) {
+  return (
+    <View style={styles.container}>
+      <View style={styles.iconContainer}>
+        <MaterialCommunityIcons name="alert-triangle-outline" size={40} color={colors.error} />
+      </View>
+      <Text style={styles.title}>An Error Occurred</Text>
+      <Text style={styles.description}>{message}</Text>
+      <Button
+        title="Retry"
+        onPress={onRetry}
+        variant="primary"
+        style={styles.button}
+      />
     </View>
   );
 }

@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/store/authStore';
 import colors from '@/constants/colors';
 import Button from '@/components/Button';
-import { LogIn } from 'lucide-react-native';
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';

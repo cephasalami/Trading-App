@@ -2,17 +2,18 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ImageBackground } from 'react-native';
 import { ProfileData } from '@/types/profile';
 import { useRouter } from 'expo-router';
-import { Share, Mail, Phone, MapPin, ExternalLink } from 'lucide-react-native';
-import colors from '@/constants/colors';
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { light as colors } from '@/constants/colors';
 import { LinearGradient } from 'expo-linear-gradient';
 
 interface ProfileCardProps {
   profile: ProfileData;
   onShare?: () => void;
+  onWriteNFC?: () => void;
   isPreview?: boolean;
 }
 
-export default function ProfileCard({ profile, onShare, isPreview = false }: ProfileCardProps) {
+export default function ProfileCard({ profile, onShare, onWriteNFC, isPreview = false }: ProfileCardProps) {
   const router = useRouter();
   
   const handlePress = () => {
@@ -43,11 +44,18 @@ export default function ProfileCard({ profile, onShare, isPreview = false }: Pro
           style={styles.gradient}
         />
         
-        {onShare && (
-          <TouchableOpacity style={styles.shareButton} onPress={onShare}>
-            <Share size={20} color={colors.text} />
-          </TouchableOpacity>
-        )}
+        <View style={styles.actionButtons}>
+          {onShare && (
+            <TouchableOpacity style={styles.actionButton} onPress={onShare}>
+              <MaterialCommunityIcons name="share-variant" size={20} color={colors.text} />
+            </TouchableOpacity>
+          )}
+          {onWriteNFC && (
+            <TouchableOpacity style={styles.actionButton} onPress={onWriteNFC}>
+              <MaterialCommunityIcons name="nfc-variant" size={20} color={colors.text} />
+            </TouchableOpacity>
+          )}
+        </View>
       </ImageBackground>
       
       <View style={styles.profileContent}>
@@ -68,21 +76,21 @@ export default function ProfileCard({ profile, onShare, isPreview = false }: Pro
           <View style={styles.contactDetails}>
             {profile.contactInfo.email && (
               <View style={styles.contactItem}>
-                <Mail size={16} color={colors.textSecondary} />
+                <MaterialCommunityIcons name="email-outline" size={16} color={colors.textSecondary} />
                 <Text style={styles.contactText}>{profile.contactInfo.email}</Text>
               </View>
             )}
             
             {profile.contactInfo.phone && (
               <View style={styles.contactItem}>
-                <Phone size={16} color={colors.textSecondary} />
+                <MaterialCommunityIcons name="phone-outline" size={16} color={colors.textSecondary} />
                 <Text style={styles.contactText}>{profile.contactInfo.phone}</Text>
               </View>
             )}
             
             {profile.contactInfo.address && (
               <View style={styles.contactItem}>
-                <MapPin size={16} color={colors.textSecondary} />
+                <MaterialCommunityIcons name="map-marker-outline" size={16} color={colors.textSecondary} />
                 <Text style={styles.contactText}>{profile.contactInfo.address}</Text>
               </View>
             )}
@@ -94,7 +102,7 @@ export default function ProfileCard({ profile, onShare, isPreview = false }: Pro
               <View style={styles.socialIcons}>
                 {profile.socialLinks.slice(0, 4).map((link) => (
                   <TouchableOpacity key={link.id} style={[styles.socialIcon, { backgroundColor: cardColor + '30' }]}>
-                    <ExternalLink size={18} color={cardColor} />
+                    <MaterialCommunityIcons name="link-variant" size={18} color={cardColor} />
                   </TouchableOpacity>
                 ))}
               </View>
@@ -190,6 +198,21 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionButtons: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    flexDirection: 'row',
+    gap: 8,
+  },
+  actionButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -1,370 +1,208 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { useTheme } from '@/hooks/useTheme';
 import { useRouter } from 'expo-router';
-import { useProfileStore } from '@/store/profileStore';
-import { useSettingsStore } from '@/store/settingsStore';
 import { useAuthStore } from '@/store/authStore';
-import colors from '@/constants/colors';
-import { 
-  UserPlus, 
-  Zap, 
-  HelpCircle, 
-  Crown, 
-  User, 
-  Mail, 
-  EyeOff, 
-  Smartphone, 
-  Link, 
-  Edit, 
-  Shield, 
-  LogOut 
-} from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
-import { Platform } from 'react-native';
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export default function SettingsScreen() {
+  const colors = useTheme();
   const router = useRouter();
-  const { profiles } = useProfileStore();
   const { signOut } = useAuthStore();
-  const { 
-    settings, 
-    isLoading, 
-    error, 
-    isInitialized,
-    updateSetting, 
-    loadSettings, 
-    clearError 
-  } = useSettingsStore();
-  
-  // Load settings on mount
-  useEffect(() => {
-    if (!isInitialized) {
-      loadSettings();
-    }
-  }, [isInitialized, loadSettings]);
-  
-  // Clear error when component unmounts
-  useEffect(() => {
-    return () => {
-      if (error) {
-        clearError();
-      }
-    };
-  }, [error, clearError]);
-  
-  const handleInvite = () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    Alert.alert('Invite Friends', 'Share Tapping with your network and earn rewards!');
-  };
-  
-  const handleActivateDevice = () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-    Alert.alert('Activate Tapping Device', 'Tap the button below to begin activation.');
-  };
-  
-  const handleHelpSupport = () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    Alert.alert('Help & Support', 'Access FAQ, contact support, or provide feedback.');
-  };
-  
-  const handleGoPremium = () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-    Alert.alert('Go Premium', 'Unlock advanced features with Tapping Premium!');
-  };
-  
-  const handleCompleteProfile = () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    router.push('/profile/create');
-  };
-  
-  const handleEditAccount = () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    Alert.alert('Edit Account', 'Manage your account settings and preferences.');
-  };
-  
-  const handleSecurity = () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    Alert.alert('Security', 'Manage your password and security settings.');
-  };
-  
+
   const handleSignOut = () => {
-    if (Platform.OS !== 'web') {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-    }
     Alert.alert(
       'Sign Out',
       'Are you sure you want to sign out?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Sign Out', 
+        {
+          text: 'Sign Out',
           style: 'destructive',
-          onPress: async () => {
-            try {
-              await signOut();
-              router.replace('/onboarding');
-            } catch (error) {
-              console.error('Sign out error:', error);
-              Alert.alert('Error', 'Failed to sign out. Please try again.');
-            }
-          }
-        }
+          onPress: () => {
+            signOut();
+            router.replace('/login');
+          },
+        },
       ]
     );
   };
-  
-  const handlePremiumFeature = (featureName: string) => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    Alert.alert('Premium Feature', `${featureName} is available with Tapping Premium.`);
+
+  const handleNFCDemo = () => {
+    router.push('/(tabs)/scan');
   };
-  
+
+  const handleNFCManager = () => {
+    router.push('/nfc/manager');
+  };
+
+  const handleNFCStats = () => {
+    router.push('/nfc/analytics');
+  };
+
   return (
-    <View style={styles.container}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>General</Text>
-          
-          <TouchableOpacity 
-            style={styles.settingItem}
-            onPress={handleInvite}
-          >
-            <View style={styles.settingIcon}>
-              <UserPlus size={20} color={colors.primary} />
-            </View>
-            <Text style={styles.settingText}>Invite</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.settingItem}
-            onPress={handleActivateDevice}
-          >
-            <View style={styles.settingIcon}>
-              <Zap size={20} color={colors.primary} />
-            </View>
-            <Text style={styles.settingText}>Activate a Tapping Device</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.settingItem}
-            onPress={handleHelpSupport}
-          >
-            <View style={styles.settingIcon}>
-              <HelpCircle size={20} color={colors.primary} />
-            </View>
-            <Text style={styles.settingText}>Help & Support</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.settingItem}
-            onPress={handleCompleteProfile}
-          >
-            <View style={styles.settingIcon}>
-              <User size={20} color={colors.primary} />
-            </View>
-            <Text style={styles.settingText}>Complete Your Profile</Text>
-          </TouchableOpacity>
-        </View>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.header}>
+        <MaterialCommunityIcons name="cog-outline" size={32} color={colors.primary} />
+        <Text style={[styles.title, { color: colors.text }]}>Settings</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+          Customize your app experience
+        </Text>
+      </View>
+
+      {/* Account Section */}
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Account</Text>
         
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Premium Features</Text>
-            <Crown size={20} color="#FFD700" />
-          </View>
-          
-          <TouchableOpacity 
-            style={[styles.settingItem, styles.premiumItem]}
-            onPress={handleGoPremium}
-          >
-            <View style={styles.settingIcon}>
-              <Crown size={20} color="#FFD700" />
-            </View>
-            <Text style={[styles.settingText, styles.premiumText]}>Go Premium</Text>
-            <Text style={styles.premiumPrice}>€4.99/month</Text>
-          </TouchableOpacity>
-          
-          <View style={[styles.settingItem, styles.premiumItem]}>
-            <View style={styles.settingIcon}>
-              <Mail size={20} color="#FFD700" />
-            </View>
-            <Text style={[styles.settingText, styles.premiumText]}>Follow Up Email</Text>
-            <Switch
-              value={settings.follow_up_email}
-              onValueChange={(value) => {
-                if (value) {
-                  handlePremiumFeature('Follow Up Email');
-                } else {
-                  updateSetting('follow_up_email', value);
-                }
-              }}
-              trackColor={{ false: '#2C2C2C', true: '#FFD700' }}
-              thumbColor={settings.follow_up_email ? '#FFFFFF' : '#CCCCCC'}
-              disabled={isLoading}
-            />
-          </View>
-          
-          <TouchableOpacity 
-            style={[styles.settingItem, styles.premiumItem]}
-            onPress={() => handlePremiumFeature('Remove Branding')}
-          >
-            <View style={styles.settingIcon}>
-              <EyeOff size={20} color="#FFD700" />
-            </View>
-            <Text style={[styles.settingText, styles.premiumText]}>Remove Branding</Text>
-            <Crown size={16} color="#FFD700" />
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.settingItem, styles.premiumItem]}
-            onPress={() => handlePremiumFeature('Direct Link')}
-          >
-            <View style={styles.settingIcon}>
-              <Link size={20} color="#FFD700" />
-            </View>
-            <Text style={[styles.settingText, styles.premiumText]}>Direct Link</Text>
-            <Crown size={16} color="#FFD700" />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={[styles.settingItem, { backgroundColor: colors.card }]} onPress={() => router.push('/profile/settings')}>
+          <MaterialCommunityIcons name="account-circle-outline" size={20} color={colors.primary} />
+          <Text style={[styles.settingText, { color: colors.text }]}>Profile Settings</Text>
+        </TouchableOpacity>
         
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Widget Settings</Text>
-          
-          <View style={styles.settingItem}>
-            <View style={styles.settingIcon}>
-              <Smartphone size={20} color={colors.primary} />
-            </View>
-            <Text style={styles.settingText}>Lockscreen Widget</Text>
-            <Switch
-              value={settings.lockscreen_widget}
-              onValueChange={(value) => updateSetting('lockscreen_widget', value)}
-              trackColor={{ false: '#2C2C2C', true: colors.primary }}
-              thumbColor={settings.lockscreen_widget ? '#FFFFFF' : '#CCCCCC'}
-              disabled={isLoading}
-            />
-          </View>
-        </View>
+        <TouchableOpacity style={[styles.settingItem, { backgroundColor: colors.card }]}>
+          <MaterialCommunityIcons name="shield-outline" size={20} color={colors.primary} />
+          <Text style={[styles.settingText, { color: colors.text }]}>Privacy & Security</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* NFC Section */}
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>NFC</Text>
         
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account</Text>
-          
-          <TouchableOpacity 
-            style={styles.settingItem}
-            onPress={handleEditAccount}
-          >
-            <View style={styles.settingIcon}>
-              <Edit size={20} color={colors.primary} />
-            </View>
-            <Text style={styles.settingText}>Edit Account</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.settingItem}
-            onPress={handleSecurity}
-          >
-            <View style={styles.settingIcon}>
-              <Shield size={20} color={colors.primary} />
-            </View>
-            <Text style={styles.settingText}>Security</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.settingItem, styles.signOutItem]}
-            onPress={handleSignOut}
-          >
-            <View style={styles.settingIcon}>
-              <LogOut size={20} color={colors.error} />
-            </View>
-            <Text style={[styles.settingText, styles.signOutText]}>Sign Out</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </View>
+        <TouchableOpacity 
+          style={[styles.settingItem, { backgroundColor: colors.card }]}
+          onPress={handleNFCManager}
+        >
+          <MaterialCommunityIcons name="nfc-variant" size={20} color={colors.primary} />
+          <Text style={[styles.settingText, { color: colors.text }]}>NFC Manager</Text>
+          <Text style={[styles.settingSubtext, { color: colors.textSecondary }]}>
+            Manage your NFC tags and view analytics
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={[styles.settingItem, { backgroundColor: colors.card }]}
+          onPress={handleNFCStats}
+        >
+          <MaterialCommunityIcons name="chart-bar" size={20} color={colors.primary} />
+          <Text style={[styles.settingText, { color: colors.text }]}>NFC Analytics</Text>
+          <Text style={[styles.settingSubtext, { color: colors.textSecondary }]}>
+            View detailed NFC usage statistics
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={[styles.settingItem, { backgroundColor: colors.card }]}
+          onPress={handleNFCDemo}
+        >
+          <MaterialCommunityIcons name="cellphone" size={20} color={colors.primary} />
+          <Text style={[styles.settingText, { color: colors.text }]}>NFC Demo & Testing</Text>
+          <Text style={[styles.settingSubtext, { color: colors.textSecondary }]}>
+            Test NFC reading and writing capabilities
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* App Section */}
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>App</Text>
+        
+        <TouchableOpacity style={[styles.settingItem, { backgroundColor: colors.card }]}>
+          <MaterialCommunityIcons name="bell-outline" size={20} color={colors.primary} />
+          <Text style={[styles.settingText, { color: colors.text }]}>Notifications</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={[styles.settingItem, { backgroundColor: colors.card }]}>
+          <MaterialCommunityIcons name="palette-outline" size={20} color={colors.primary} />
+          <Text style={[styles.settingText, { color: colors.text }]}>Appearance</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={[styles.settingItem, { backgroundColor: colors.card }]} onPress={() => router.push('/legal/privacy')}>
+          <MaterialCommunityIcons name="file-document-outline" size={20} color={colors.primary} />
+          <Text style={[styles.settingText, { color: colors.text }]}>Privacy Policy</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={[styles.settingItem, { backgroundColor: colors.card }]} onPress={() => router.push('/legal/terms')}>
+          <MaterialCommunityIcons name="file-document-outline" size={20} color={colors.primary} />
+          <Text style={[styles.settingText, { color: colors.text }]}>Terms of Service</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={[styles.settingItem, { backgroundColor: colors.card }]}>
+          <MaterialCommunityIcons name="help-circle-outline" size={20} color={colors.primary} />
+          <Text style={[styles.settingText, { color: colors.text }]}>Help & Support</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Sign Out */}
+      <TouchableOpacity 
+        style={[styles.signOutButton, { backgroundColor: colors.error + '20' }]}
+        onPress={handleSignOut}
+      >
+        <MaterialCommunityIcons name="logout" size={20} color={colors.error} />
+        <Text style={[styles.signOutText, { color: colors.error }]}>Sign Out</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  contentContainer: {
     padding: 16,
-    paddingBottom: 32,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 32,
+    paddingTop: 20,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 16,
+    textAlign: 'center',
   },
   section: {
     marginBottom: 24,
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600' as const,
-    color: '#FFFFFF',
+    fontWeight: '600',
     marginBottom: 12,
+    marginLeft: 4,
   },
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(26, 26, 26, 0.8)',
-    borderWidth: 1,
-    borderColor: '#2C2C2C',
-    borderRadius: 16,
     padding: 16,
+    borderRadius: 12,
     marginBottom: 8,
-  },
-  premiumItem: {
-    borderColor: '#FFD700',
-    backgroundColor: 'rgba(255, 215, 0, 0.1)',
-  },
-  signOutItem: {
-    borderColor: colors.error,
-    backgroundColor: 'rgba(220, 53, 69, 0.1)',
-  },
-  settingIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(44, 44, 44, 0.8)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
+    gap: 12,
   },
   settingText: {
     fontSize: 16,
-    color: '#FFFFFF',
+    fontWeight: '500',
     flex: 1,
   },
-  premiumText: {
-    color: '#FFD700',
+  settingSubtext: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  signOutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 16,
+    marginBottom: 32,
+    gap: 8,
   },
   signOutText: {
-    color: colors.error,
-  },
-  premiumPrice: {
-    fontSize: 14,
-    color: '#FFD700',
-    fontWeight: '600' as const,
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

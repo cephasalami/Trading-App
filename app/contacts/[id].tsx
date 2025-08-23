@@ -1,30 +1,92 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, Platform } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useContactsStore } from '@/store/contactsStore';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/store/authStore';
 import colors from '@/constants/colors';
-import ProfileCard from '@/components/ProfileCard';
 import Button from '@/components/Button';
-import { Edit, Mail, Phone, Plus, Share, Tag, Trash, X } from 'lucide-react-native';
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from 'expo-haptics';
-import * as Linking from 'expo-linking';
+import { Platform } from 'react-native';
+
+import { ErrorState } from '@/components/EmptyState';
+
+const fetchContact = async (contactId: string) => {
+  const { data, error } = await supabase
+    .from('contacts')
+    .select('*')
+    .eq('id', contactId)
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+  return data;
+};
 
 export default function ContactDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  
-  const { contacts, updateContact, deleteContact, addTagToContact, removeTagFromContact, addNoteToContact } = useContactsStore();
-  
-  const contact = contacts.find(c => c.id === id);
-  
-  const [newTag, setNewTag] = useState('');
-  const [newNote, setNewNote] = useState('');
-  const [isEditingNotes, setIsEditingNotes] = useState(false);
-  
+  const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+
+  const { data: contact, isLoading, error, refetch } = useQuery({
+    queryKey: ['contact', id],
+    queryFn: () => fetchContact(id),
+  });
+
+  const deleteContactMutation = useMutation({
+    mutationFn: async (contactId: string) => {
+      const { error } = await supabase
+        .from('contacts')
+        .delete()
+        .eq('id', contactId);
+
+      if (error) {
+        throw new Error(error.message);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      router.back();
+    },
+  });
+
+  const handleDeleteContact = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    }
+    Alert.alert(
+      'Delete Contact',
+      'Are you sure you want to delete this contact?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => deleteContactMutation.mutate(id),
+        },
+      ]
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <View style={styles.centered}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return <ErrorState message={(error as Error).message} onRetry={refetch} />;
+  }
+
   if (!contact) {
     return (
-      <View style={styles.notFound}>
-        <Text style={styles.notFoundText}>Contact not found</Text>
+      <View style={styles.centered}>
+        <Text>Contact not found</Text>
         <Button
           title="Go Back"
           onPress={() => router.back()}
@@ -34,234 +96,42 @@ export default function ContactDetailScreen() {
       </View>
     );
   }
-  
-  const handleAddTag = () => {
-    if (!newTag.trim()) return;
-    
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    
-    addTagToContact(id, newTag.trim());
-    setNewTag('');
-  };
-  
-  const handleRemoveTag = (tag: string) => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-    
-    removeTagFromContact(id, tag);
-  };
-  
-  const handleAddNote = () => {
-    if (!newNote.trim()) return;
-    
-    if (Platform.OS !== 'web') {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-    
-    addNoteToContact(id, newNote.trim());
-    setNewNote('');
-    setIsEditingNotes(false);
-  };
-  
-  const handleDeleteContact = () => {
-    if (Platform.OS !== 'web') {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-    }
-    
-    // In a real app, we would show a confirmation dialog
-    deleteContact(id);
-    router.replace('/contacts');
-  };
-  
-  const handleCall = () => {
-    if (!contact.contactInfo.phone) return;
-    
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-    
-    Linking.openURL(`tel:${contact.contactInfo.phone}`);
-  };
-  
-  const handleEmail = () => {
-    if (!contact.contactInfo.email) return;
-    
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-    
-    Linking.openURL(`mailto:${contact.contactInfo.email}`);
-  };
-  
-  const formatDate = (timestamp?: number) => {
-    if (!timestamp) return '';
-    
-    const date = new Date(timestamp);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-  
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      <ProfileCard profile={contact} isPreview />
-      
-      <View style={styles.actionButtons}>
-        {contact.contactInfo.phone && (
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={handleCall}
-          >
-            <View style={styles.actionIcon}>
-              <Phone size={24} color={colors.primary} />
-            </View>
-            <Text style={styles.actionText}>Call</Text>
-          </TouchableOpacity>
-        )}
-        
-        {contact.contactInfo.email && (
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={handleEmail}
-          >
-            <View style={styles.actionIcon}>
-              <Mail size={24} color={colors.primary} />
-            </View>
-            <Text style={styles.actionText}>Email</Text>
-          </TouchableOpacity>
-        )}
-        
-        <TouchableOpacity 
-          style={styles.actionButton}
-          onPress={() => setIsEditingNotes(true)}
+      <View style={styles.header}>
+        <Text style={styles.title}>{contact.name}'s Details</Text>
+        <TouchableOpacity
+          style={styles.iconButton}
+          onPress={handleDeleteContact}
         >
-          <View style={styles.actionIcon}>
-            <Edit size={24} color={colors.primary} />
-          </View>
-          <Text style={styles.actionText}>Note</Text>
+          <MaterialCommunityIcons name="trash-can-outline" size={20} color={colors.error} />
         </TouchableOpacity>
       </View>
-      
+
       <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Tags</Text>
+        <Text style={styles.sectionTitle}>Contact Information</Text>
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Name</Text>
+          <Text style={styles.infoValue}>{contact.name}</Text>
         </View>
-        
-        <View style={styles.tagsContainer}>
-          {contact.tags && contact.tags.map((tag, index) => (
-            <View key={index} style={styles.tag}>
-              <Text style={styles.tagText}>{tag}</Text>
-              <TouchableOpacity 
-                style={styles.removeTagButton}
-                onPress={() => handleRemoveTag(tag)}
-              >
-                <X size={14} color={colors.darkGray} />
-              </TouchableOpacity>
-            </View>
-          ))}
-          
-          <View style={styles.addTagContainer}>
-            <TextInput
-              style={styles.tagInput}
-              value={newTag}
-              onChangeText={setNewTag}
-              placeholder="Add tag..."
-              placeholderTextColor={colors.mediumGray}
-              onSubmitEditing={handleAddTag}
-            />
-            <TouchableOpacity 
-              style={styles.addTagButton}
-              onPress={handleAddTag}
-              disabled={!newTag.trim()}
-            >
-              <Plus size={16} color={newTag.trim() ? colors.primary : colors.mediumGray} />
-            </TouchableOpacity>
-          </View>
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Email</Text>
+          <Text style={styles.infoValue}>{contact.email}</Text>
+        </View>
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Phone</Text>
+          <Text style={styles.infoValue}>{contact.phone}</Text>
+        </View>
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Company</Text>
+          <Text style={styles.infoValue}>{contact.company}</Text>
+        </View>
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Job Title</Text>
+          <Text style={styles.infoValue}>{contact.job_title}</Text>
         </View>
       </View>
-      
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Notes</Text>
-          {!isEditingNotes && (
-            <TouchableOpacity onPress={() => setIsEditingNotes(true)}>
-              <Edit size={18} color={colors.primary} />
-            </TouchableOpacity>
-          )}
-        </View>
-        
-        {isEditingNotes ? (
-          <View style={styles.addNoteContainer}>
-            <TextInput
-              style={styles.noteInput}
-              value={newNote}
-              onChangeText={setNewNote}
-              placeholder="Add a note about this contact..."
-              placeholderTextColor={colors.mediumGray}
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-              autoFocus
-            />
-            <View style={styles.noteActions}>
-              <Button
-                title="Cancel"
-                onPress={() => {
-                  setIsEditingNotes(false);
-                  setNewNote('');
-                }}
-                variant="outline"
-                size="small"
-                style={styles.noteActionButton}
-              />
-              <Button
-                title="Save"
-                onPress={handleAddNote}
-                variant="primary"
-                size="small"
-                style={styles.noteActionButton}
-                disabled={!newNote.trim()}
-              />
-            </View>
-          </View>
-        ) : (
-          <View>
-            {contact.notes ? (
-              <Text style={styles.noteText}>{contact.notes}</Text>
-            ) : (
-              <TouchableOpacity 
-                style={styles.addNotePrompt}
-                onPress={() => setIsEditingNotes(true)}
-              >
-                <Plus size={18} color={colors.primary} />
-                <Text style={styles.addNoteText}>Add a note</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        )}
-      </View>
-      
-      <View style={styles.metaInfo}>
-        {contact.lastInteraction && (
-          <Text style={styles.metaText}>
-            Last interaction: {formatDate(contact.lastInteraction)}
-          </Text>
-        )}
-      </View>
-      
-      <Button
-        title="Delete Contact"
-        onPress={handleDeleteContact}
-        variant="outline"
-        icon={<Trash size={18} color={colors.error} />}
-        style={styles.deleteButton}
-        textStyle={{ color: colors.error }}
-      />
     </ScrollView>
   );
 }
@@ -275,156 +145,74 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 32,
   },
-  actionButtons: {
+  header: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 16,
-    marginBottom: 24,
-  },
-  actionButton: {
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 16,
   },
-  actionIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+  title: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  actionText: {
-    fontSize: 14,
-    color: colors.text,
-    fontWeight: '500',
-  },
-  section: {
-    backgroundColor: colors.background,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
+  section: {
+    marginTop: 24,
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: colors.text,
+    marginBottom: 12,
   },
-  tagsContainer: {
+  infoRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.lightGray,
   },
-  tag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.lightGray,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    gap: 6,
-  },
-  tagText: {
-    fontSize: 14,
-    color: colors.darkGray,
-  },
-  removeTagButton: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: colors.mediumGray,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addTagContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.lightGray,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  tagInput: {
-    fontSize: 14,
-    color: colors.text,
-    minWidth: 80,
-  },
-  addTagButton: {
-    marginLeft: 4,
-  },
-  addNoteContainer: {
-    gap: 12,
-  },
-  noteInput: {
-    backgroundColor: colors.lightGray,
-    borderRadius: 8,
-    padding: 12,
+  infoLabel: {
     fontSize: 16,
+    fontWeight: '500',
     color: colors.text,
-    minHeight: 100,
   },
-  noteActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 12,
-  },
-  noteActionButton: {
-    minWidth: 80,
-  },
-  noteText: {
+  infoValue: {
     fontSize: 16,
     color: colors.textSecondary,
-    lineHeight: 24,
   },
-  addNotePrompt: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    padding: 12,
-    backgroundColor: colors.lightGray,
-    borderRadius: 8,
-  },
-  addNoteText: {
-    fontSize: 16,
-    color: colors.primary,
-  },
-  metaInfo: {
-    marginBottom: 24,
-    padding: 16,
-  },
-  metaText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  deleteButton: {
-    borderColor: colors.error,
-  },
-  notFound: {
+  centered: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
   },
-  notFoundText: {
+  errorText: {
     fontSize: 18,
-    color: colors.textSecondary,
+    color: colors.error,
     marginBottom: 16,
+    textAlign: 'center',
   },
   backButton: {
     minWidth: 120,

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import colors from '@/constants/colors';
 import Button from '@/components/Button';
-import { CheckCircle, XCircle, User, Globe, FileText } from 'lucide-react-native';
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 import { parseQRCodeData, generateContactId, processImageWithAI, createContactFromSocialProfile } from '@/lib/utils';
@@ -510,12 +510,12 @@ export default function ScanResultScreen() {
   };
   
   const getIcon = () => {
-    if (parsedData?.type === 'profile') return <User size={64} color={colors.primary} />;
-    if (parsedData?.type === 'vcard') return <FileText size={64} color={colors.primary} />;
-    if (parsedData?.type === 'linkedin' || parsedData?.type === 'twitter' || parsedData?.type === 'instagram') return <User size={64} color={colors.primary} />;
-    if (parsedData?.type === 'url') return <Globe size={64} color={colors.primary} />;
-    if (scanMode === 'paper' || scanMode === 'badge') return <FileText size={64} color={colors.primary} />;
-    return <CheckCircle size={64} color={colors.success} />;
+    if (parsedData?.type === 'profile') return <MaterialCommunityIcons name="account-outline" size={64} color={colors.primary} />;
+    if (parsedData?.type === 'vcard') return <MaterialCommunityIcons name="file-document-outline" size={64} color={colors.primary} />;
+    if (parsedData?.type === 'linkedin' || parsedData?.type === 'twitter' || parsedData?.type === 'instagram') return <MaterialCommunityIcons name="account-outline" size={64} color={colors.primary} />;
+    if (parsedData?.type === 'url') return <MaterialCommunityIcons name="web" size={64} color={colors.primary} />;
+    if (scanMode === 'paper' || scanMode === 'badge') return <MaterialCommunityIcons name="file-document-outline" size={64} color={colors.primary} />;
+    return <MaterialCommunityIcons name="check-circle-outline" size={64} color={colors.success} />;
   };
 
   const getTitle = () => {
@@ -572,7 +572,7 @@ export default function ScanResultScreen() {
     return (
       <View style={styles.errorContainer}>
         <View style={styles.iconContainer}>
-          <XCircle size={64} color={colors.error} />
+          <MaterialCommunityIcons name="close-circle-outline" size={64} color={colors.error} />
         </View>
         <Text style={styles.errorTitle}>Scan Failed</Text>
         <Text style={styles.errorText}>{error}</Text>

@@ -6,7 +6,7 @@ import colors from '@/constants/colors';
 import Button from '@/components/Button';
 import ColorPicker from '@/components/ColorPicker';
 import * as ImagePicker from 'expo-image-picker';
-import { Camera, Plus, Trash, X } from 'lucide-react-native';
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 
@@ -197,7 +197,7 @@ export default function EditProfileScreen() {
               <Image source={{ uri: avatar }} style={styles.avatarImage} />
             ) : (
               <View style={styles.avatarPlaceholder}>
-                <Camera size={24} color={colors.primary} />
+                <MaterialCommunityIcons name="camera-outline" size={24} color={colors.primary} />
               </View>
             )}
             <Text style={styles.imageLabel}>Profile Photo</Text>
@@ -211,7 +211,7 @@ export default function EditProfileScreen() {
               <Image source={{ uri: coverImage }} style={styles.coverImage} />
             ) : (
               <View style={styles.coverPlaceholder}>
-                <Camera size={24} color={colors.primary} />
+                <MaterialCommunityIcons name="camera-outline" size={24} color={colors.primary} />
               </View>
             )}
             <Text style={styles.imageLabel}>Cover Image</Text>
@@ -336,7 +336,7 @@ export default function EditProfileScreen() {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Social Links</Text>
           <TouchableOpacity onPress={handleAddSocialLink}>
-            <Plus size={20} color={colors.primary} />
+            <MaterialCommunityIcons name="plus" size={20} color={colors.primary} />
           </TouchableOpacity>
         </View>
         
@@ -369,7 +369,7 @@ export default function EditProfileScreen() {
               style={styles.removeButton}
               onPress={() => handleRemoveSocialLink(link.id)}
             >
-              <X size={20} color={colors.error} />
+              <MaterialCommunityIcons name="close" size={20} color={colors.error} />
             </TouchableOpacity>
           </View>
         ))}
@@ -379,7 +379,7 @@ export default function EditProfileScreen() {
             style={styles.addSocialButton}
             onPress={handleAddSocialLink}
           >
-            <Plus size={20} color={colors.primary} />
+            <MaterialCommunityIcons name="plus" size={20} color={colors.primary} />
             <Text style={styles.addSocialText}>Add Social Link</Text>
           </TouchableOpacity>
         )}
@@ -396,7 +396,7 @@ export default function EditProfileScreen() {
         title="Delete Profile"
         onPress={handleDelete}
         variant="outline"
-        icon={<Trash size={18} color={colors.error} />}
+        icon={<MaterialCommunityIcons name="trash-can-outline" size={18} color={colors.error} />}
         style={styles.deleteButton}
         textStyle={{ color: colors.error }}
       />

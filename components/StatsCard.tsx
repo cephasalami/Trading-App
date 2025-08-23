@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { ProfileStats } from '@/types/profile';
 import colors from '@/constants/colors';
-import { Eye, Save, Clock } from 'lucide-react-native';
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 interface StatsCardProps {
   stats: ProfileStats;
@@ -28,7 +28,7 @@ export default function StatsCard({ stats }: StatsCardProps) {
       <View style={styles.statsRow}>
         <View style={styles.statItem}>
           <View style={styles.iconContainer}>
-            <Eye size={20} color={colors.primary} />
+            <MaterialCommunityIcons name="eye-outline" size={20} color={colors.primary} />
           </View>
           <View>
             <Text style={styles.statValue}>{stats.views}</Text>
@@ -38,7 +38,7 @@ export default function StatsCard({ stats }: StatsCardProps) {
         
         <View style={styles.statItem}>
           <View style={styles.iconContainer}>
-            <Save size={20} color={colors.secondary} />
+            <MaterialCommunityIcons name="content-save-outline" size={20} color={colors.secondary} />
           </View>
           <View>
             <Text style={styles.statValue}>{stats.saves}</Text>
@@ -48,7 +48,7 @@ export default function StatsCard({ stats }: StatsCardProps) {
       </View>
       
       <View style={styles.lastViewed}>
-        <Clock size={16} color="#CCCCCC" />
+        <MaterialCommunityIcons name="clock-outline" size={16} color="#CCCCCC" />
         <Text style={styles.lastViewedText}>
           Last viewed: {formatDate(stats.lastViewed)}
         </Text>

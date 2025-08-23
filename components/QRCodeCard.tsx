@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Image } from 'react-native';
 import { ProfileData } from '@/types/profile';
 import colors from '@/constants/colors';
 import Button from './Button';
-import { Share, QrCode } from 'lucide-react-native';
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from 'expo-linear-gradient';
 import { generateQRCodeUrl } from '@/lib/sharing';
 
@@ -26,7 +26,7 @@ export default function QRCodeCard({ profile, onShare }: QRCodeCardProps) {
         style={styles.gradient}
       >
         <View style={styles.qrContainer}>
-          <QrCode size={32} color={colors.text} style={styles.qrIcon} />
+          <MaterialCommunityIcons name="qrcode" size={32} color={colors.text} style={styles.qrIcon} />
           <Image 
             source={{ uri: qrCodeUrl }}
             style={styles.qrCode}
@@ -45,7 +45,7 @@ export default function QRCodeCard({ profile, onShare }: QRCodeCardProps) {
             title="Share Card"
             onPress={onShare}
             variant="gradient"
-            icon={<Share size={18} color="white" />}
+            icon={<MaterialCommunityIcons name="share-variant" size={18} color="white" />}
             style={styles.shareButton}
           />
         </View>

@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Image, Alert, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/store/authStore';
-import colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import Button from '@/components/Button';
 import * as ImagePicker from 'expo-image-picker';
-import { Camera, ChevronLeft, ChevronRight, Link, User } from 'lucide-react-native';
-import *s Haptics from 'expo-haptics';
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 import { isValidEmail } from '@/lib/utils';
 import { createUserRecord } from '@/lib/user';
@@ -22,6 +22,7 @@ const steps = [
 
 export default function AccountSetupScreen() {
   const router = useRouter();
+  const colors = useTheme();
   const { signUp, isLoading, error, clearError, user } = useAuthStore();
   
   const [currentStep, setCurrentStep] = useState(0);
@@ -70,9 +71,7 @@ export default function AccountSetupScreen() {
     
     clearError();
     
-    // Validate current step
     if (currentStep === 0) {
-      // Account creation step
       if (!email.trim() || !password.trim() || !confirmPassword.trim() || !username.trim()) {
         Alert.alert('Error', 'Please fill in all fields');
         return;
@@ -90,7 +89,6 @@ export default function AccountSetupScreen() {
         return;
       }
     } else if (currentStep === 1 && !name.trim()) {
-      // Name is required
       Alert.alert('Error', 'Please enter your name');
       return;
     }
@@ -120,35 +118,123 @@ export default function AccountSetupScreen() {
     }
     
     try {
-      const userData = {
-        name: name.trim(),
-        username: username.trim(),
-        bio: bio.trim() || undefined,
-        avatar: avatar || undefined,
-        headline: headline.trim() || undefined,
-        company: company.trim() || undefined,
-        position: position.trim() || undefined,
-        phone: phone.trim() || undefined,
-        socialLinks: socialLinks.filter(link => link.url.trim()),
-      };
-
+      // First, create the Supabase Auth account
       await signUp(email.trim(), password);
-      if (user) {
-        await createUserRecord(user, userData);
+      
+      // Wait a moment for the auth state to update
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Get the current user from the store
+      const currentUser = useAuthStore.getState().user;
+      
+      if (currentUser) {
+        const userData = {
+          name: name.trim(),
+          username: username.trim(),
+          bio: bio.trim() || undefined,
+          avatar: avatar || undefined,
+          headline: headline.trim() || undefined,
+          company: company.trim() || undefined,
+          position: position.trim() || undefined,
+          phone: phone.trim() || undefined,
+          socialLinks: socialLinks.filter(link => link.url.trim()),
+        };
+
+        // Create the user record in the database
+        await createUserRecord(currentUser, userData);
+        
+        // Navigate to email verification
+        router.replace(`/email-verification?email=${encodeURIComponent(email.trim())}`);
+      } else {
+        throw new Error('User not found after signup');
       }
-      // Navigate to email verification
-      router.replace(`/email-verification?email=${encodeURIComponent(email.trim())}`);
-    } catch (err) {
+    } catch (err: any) {
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
-      Alert.alert('Account Creation Failed', error || 'An error occurred during account creation');
+      console.error('Account creation error:', err);
+      Alert.alert('Account Creation Failed', err.message || 'An error occurred during account creation');
     }
   };
   
   const renderStepContent = () => {
     const step = steps[currentStep];
     
+    const styles = StyleSheet.create({
+        stepContent: {
+            flex: 1,
+        },
+        stepTitle: {
+            fontSize: 24,
+            fontWeight: '700',
+            color: colors.text,
+            marginBottom: 16,
+        },
+        stepDescription: {
+            fontSize: 16,
+            color: colors.textSecondary,
+            marginBottom: 24,
+        },
+        input: {
+            backgroundColor: colors.lightGray,
+            borderRadius: 8,
+            padding: 16,
+            fontSize: 16,
+            color: colors.text,
+            marginBottom: 16,
+        },
+        textArea: {
+            minHeight: 120,
+        },
+        photoSelector: {
+            alignItems: 'center',
+            marginVertical: 24,
+        },
+        avatarPlaceholder: {
+            width: 150,
+            height: 150,
+            borderRadius: 75,
+            backgroundColor: colors.lightGray,
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
+        avatarImage: {
+            width: 150,
+            height: 150,
+            borderRadius: 75,
+        },
+        photoHelp: {
+            fontSize: 14,
+            color: colors.textSecondary,
+            textAlign: 'center',
+            marginTop: 8,
+        },
+        inputGroup: {
+            marginBottom: 16,
+        },
+        label: {
+            fontSize: 16,
+            fontWeight: '500',
+            color: colors.text,
+            marginBottom: 8,
+        },
+        socialLinkContainer: {
+            marginBottom: 16,
+        },
+        socialLinkInputs: {
+            flexDirection: 'row',
+            gap: 12,
+        },
+        platformInput: {
+            flex: 1,
+            marginBottom: 0,
+        },
+        urlInput: {
+            flex: 2,
+            marginBottom: 0,
+        },
+    });
+
     switch (step.id) {
       case 'account':
         return (
@@ -166,8 +252,6 @@ export default function AccountSetupScreen() {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoFocus
-                returnKeyType="next"
-                blurOnSubmit={false}
               />
             </View>
             
@@ -180,8 +264,6 @@ export default function AccountSetupScreen() {
                 placeholder="Choose a unique username"
                 placeholderTextColor={colors.mediumGray}
                 autoCapitalize="none"
-                returnKeyType="next"
-                blurOnSubmit={false}
               />
             </View>
             
@@ -194,8 +276,6 @@ export default function AccountSetupScreen() {
                 placeholder="Create a secure password"
                 placeholderTextColor={colors.mediumGray}
                 secureTextEntry
-                returnKeyType="next"
-                blurOnSubmit={false}
               />
             </View>
             
@@ -208,8 +288,6 @@ export default function AccountSetupScreen() {
                 placeholder="Confirm your password"
                 placeholderTextColor={colors.mediumGray}
                 secureTextEntry
-                returnKeyType="done"
-                blurOnSubmit={true}
               />
             </View>
           </View>
@@ -226,8 +304,6 @@ export default function AccountSetupScreen() {
               placeholder="Enter your full name"
               placeholderTextColor={colors.mediumGray}
               autoFocus
-              returnKeyType="done"
-              blurOnSubmit={true}
             />
           </View>
         );
@@ -246,8 +322,6 @@ export default function AccountSetupScreen() {
               numberOfLines={4}
               textAlignVertical="top"
               autoFocus
-              returnKeyType="done"
-              blurOnSubmit={true}
             />
           </View>
         );
@@ -264,7 +338,7 @@ export default function AccountSetupScreen() {
                 <Image source={{ uri: avatar }} style={styles.avatarImage} />
               ) : (
                 <View style={styles.avatarPlaceholder}>
-                  <Camera size={32} color={colors.primary} />
+                  <MaterialCommunityIcons name="camera-outline" size={32} color={colors.primary} />
                 </View>
               )}
             </TouchableOpacity>
@@ -285,8 +359,6 @@ export default function AccountSetupScreen() {
                 onChangeText={setHeadline}
                 placeholder="e.g. Product Manager | Tech Enthusiast"
                 placeholderTextColor={colors.mediumGray}
-                returnKeyType="next"
-                blurOnSubmit={false}
               />
             </View>
             
@@ -298,8 +370,6 @@ export default function AccountSetupScreen() {
                 onChangeText={setCompany}
                 placeholder="Where do you work?"
                 placeholderTextColor={colors.mediumGray}
-                returnKeyType="next"
-                blurOnSubmit={false}
               />
             </View>
             
@@ -311,8 +381,6 @@ export default function AccountSetupScreen() {
                 onChangeText={setPosition}
                 placeholder="Your job title"
                 placeholderTextColor={colors.mediumGray}
-                returnKeyType="next"
-                blurOnSubmit={false}
               />
             </View>
             
@@ -326,8 +394,6 @@ export default function AccountSetupScreen() {
                 placeholderTextColor={colors.mediumGray}
                 keyboardType="email-address"
                 autoCapitalize="none"
-                returnKeyType="next"
-                blurOnSubmit={false}
               />
             </View>
             
@@ -340,8 +406,6 @@ export default function AccountSetupScreen() {
                 placeholder="+1 (555) 123-4567"
                 placeholderTextColor={colors.mediumGray}
                 keyboardType="phone-pad"
-                returnKeyType="done"
-                blurOnSubmit={true}
               />
             </View>
           </View>
@@ -364,8 +428,6 @@ export default function AccountSetupScreen() {
                     onChangeText={(value) => handleUpdateSocialLink(link.id, 'platform', value)}
                     placeholder="Platform"
                     placeholderTextColor={colors.mediumGray}
-                    returnKeyType="next"
-                    blurOnSubmit={false}
                   />
                   
                   <TextInput
@@ -375,8 +437,6 @@ export default function AccountSetupScreen() {
                     placeholder="URL or username"
                     placeholderTextColor={colors.mediumGray}
                     autoCapitalize="none"
-                    returnKeyType="done"
-                    blurOnSubmit={true}
                   />
                 </View>
               </View>
@@ -389,6 +449,65 @@ export default function AccountSetupScreen() {
     }
   };
   
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingTop: 60,
+      paddingBottom: 16,
+    },
+    backButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    stepIndicator: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    stepDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: colors.mediumGray,
+    },
+    activeStepDot: {
+      width: 24,
+      backgroundColor: colors.primary,
+    },
+    placeholder: {
+      width: 40,
+    },
+    content: {
+      flex: 1,
+    },
+    contentContainer: {
+      padding: 24,
+      paddingBottom: 100,
+    },
+    footer: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      padding: 16,
+      backgroundColor: colors.background,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    button: {
+      width: '100%',
+    },
+  });
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -396,7 +515,7 @@ export default function AccountSetupScreen() {
           style={styles.backButton}
           onPress={handleBack}
         >
-          <ChevronLeft size={24} color={colors.text} />
+          <MaterialCommunityIcons name="chevron-left" size={24} color={colors.text} />
         </TouchableOpacity>
         
         <View style={styles.stepIndicator}>
@@ -429,7 +548,7 @@ export default function AccountSetupScreen() {
           title={isLoading ? "Creating Account..." : (currentStep < steps.length - 1 ? "Continue" : "Complete Setup")}
           onPress={handleNext}
           variant="primary"
-          icon={!isLoading ? <ChevronRight size={20} color="white" /> : undefined}
+          icon={!isLoading ? <MaterialCommunityIcons name="chevron-right" size={20} color={colors.card} /> : undefined}
           iconPosition="right"
           style={styles.button}
           disabled={isLoading}
@@ -438,134 +557,3 @@ export default function AccountSetupScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 60,
-    paddingBottom: 16,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepIndicator: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  stepDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.mediumGray,
-  },
-  activeStepDot: {
-    width: 24,
-    backgroundColor: colors.primary,
-  },
-  placeholder: {
-    width: 40,
-  },
-  content: {
-    flex: 1,
-  },
-  contentContainer: {
-    padding: 24,
-    paddingBottom: 100,
-  },
-  stepContent: {
-    flex: 1,
-  },
-  stepTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 16,
-  },
-  stepDescription: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    marginBottom: 24,
-  },
-  input: {
-    backgroundColor: colors.lightGray,
-    borderRadius: 8,
-    padding: 16,
-    fontSize: 16,
-    color: colors.text,
-    marginBottom: 16,
-  },
-  textArea: {
-    minHeight: 120,
-  },
-  photoSelector: {
-    alignItems: 'center',
-    marginVertical: 24,
-  },
-  avatarPlaceholder: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    backgroundColor: colors.lightGray,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarImage: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-  },
-  photoHelp: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginTop: 8,
-  },
-  inputGroup: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: colors.text,
-    marginBottom: 8,
-  },
-  socialLinkContainer: {
-    marginBottom: 16,
-  },
-  socialLinkInputs: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  platformInput: {
-    flex: 1,
-    marginBottom: 0,
-  },
-  urlInput: {
-    flex: 2,
-    marginBottom: 0,
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 16,
-    backgroundColor: colors.background,
-    borderTopWidth: 1,
-    borderTopColor: colors.lightGray,
-  },
-  button: {
-    width: '100%',
-  },
-});

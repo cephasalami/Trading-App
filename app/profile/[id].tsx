@@ -6,7 +6,7 @@ import { useContactsStore } from '@/store/contactsStore';
 import colors from '@/constants/colors';
 import ProfileCard from '@/components/ProfileCard';
 import Button from '@/components/Button';
-import { Edit, Share, UserPlus } from 'lucide-react-native';
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 
@@ -82,14 +82,14 @@ export default function ProfileDetailScreen() {
             style={styles.iconButton}
             onPress={handleEditProfile}
           >
-            <Edit size={20} color={colors.primary} />
+            <MaterialCommunityIcons name="pencil-outline" size={20} color={colors.primary} />
           </TouchableOpacity>
           
           <TouchableOpacity 
             style={styles.iconButton}
             onPress={handleShareProfile}
           >
-            <Share size={20} color={colors.primary} />
+            <MaterialCommunityIcons name="share-variant" size={20} color={colors.primary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -101,7 +101,7 @@ export default function ProfileDetailScreen() {
           title="Add to Contacts"
           onPress={handleAddToContacts}
           variant="primary"
-          icon={<UserPlus size={20} color="white" />}
+          icon={<MaterialCommunityIcons name="account-plus-outline" size={20} color="white" />}
           style={styles.addButton}
         />
       )}

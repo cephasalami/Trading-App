@@ -9,7 +9,7 @@ import {
   ScrollView,
   TextInput,
 } from 'react-native';
-import { X, Crown, Download, Share } from 'lucide-react-native';
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import colors from '@/constants/colors';
 import { generateCustomQRCodeUrl } from '@/lib/sharing';
 import ColorPicker from './ColorPicker';
@@ -82,10 +82,10 @@ export default function QRCustomizationModal({
       <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <X size={24} color={colors.text} />
+            <MaterialCommunityIcons name="close" size={24} color={colors.text} />
           </TouchableOpacity>
           <View style={styles.headerTitle}>
-            <Crown size={20} color="#FFD700" />
+            <MaterialCommunityIcons name="crown" size={20} color="#FFD700" />
             <Text style={styles.title}>Customize QR Code</Text>
           </View>
           <View style={styles.headerSpacer} />
@@ -203,14 +203,14 @@ export default function QRCustomizationModal({
               title="Save to Photos"
               onPress={handleSave}
               variant="outline"
-              icon={<Download size={18} color={colors.primary} />}
+              icon={<MaterialCommunityIcons name="download-outline" size={18} color={colors.primary} />}
               style={styles.actionButton}
             />
             <Button
               title="Share QR Code"
               onPress={handleShare}
               variant="gradient"
-              icon={<Share size={18} color="white" />}
+              icon={<MaterialCommunityIcons name="share-variant" size={18} color="white" />}
               style={styles.actionButton}
             />
           </View>

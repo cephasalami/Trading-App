@@ -1,6 +1,6 @@
 import React from "react";
 import { Tabs } from "expo-router";
-import { CreditCard, Users, Share, QrCode, Settings } from "lucide-react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import colors from "@/constants/colors";
 
 export default function TabLayout() {
@@ -36,35 +36,35 @@ export default function TabLayout() {
         name="cards"
         options={{
           title: "Cards",
-          tabBarIcon: ({ color, size }) => <CreditCard size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="credit-card" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="contacts"
         options={{
           title: "Contacts",
-          tabBarIcon: ({ color, size }) => <Users size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="account-group" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="share"
         options={{
           title: "Share",
-          tabBarIcon: ({ color, size }) => <Share size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="share-variant" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="scan"
         options={{
           title: "Scan",
-          tabBarIcon: ({ color, size }) => <QrCode size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="qrcode" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: "Settings",
-          tabBarIcon: ({ color, size }) => <Settings size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="cog" size={size} color={color} />,
         }}
       />
     </Tabs>

@@ -196,6 +196,55 @@ function RootLayoutNav({ initialRoute }: { initialRoute?: string }) {
           presentation: "modal"
         }} 
       />
+      <Stack.Screen 
+        name="legal/privacy" 
+        options={{ 
+          title: "Privacy Policy",
+          presentation: "modal"
+        }} 
+      />
+      <Stack.Screen 
+        name="legal/terms" 
+        options={{ 
+          title: "Terms of Service",
+          presentation: "modal"
+        }} 
+      />
+      <Stack.Screen 
+        name="nfc/manager" 
+        options={{ 
+          title: "NFC Manager",
+          presentation: "modal"
+        }} 
+      />
+      <Stack.Screen 
+        name="nfc/activate" 
+        options={{ 
+          title: "Activate NFC Tag",
+          presentation: "modal"
+        }} 
+      />
+      <Stack.Screen 
+        name="nfc/configure/[id]" 
+        options={{ 
+          title: "Configure NFC Tag",
+          presentation: "modal"
+        }} 
+      />
+      <Stack.Screen 
+        name="nfc/analytics" 
+        options={{ 
+          title: "NFC Analytics",
+          presentation: "modal"
+        }} 
+      />
+      <Stack.Screen 
+        name="profile/settings" 
+        options={{ 
+          title: "Profile Settings",
+          presentation: "modal"
+        }} 
+      />
     </Stack>
   );
 }

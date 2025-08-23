@@ -2,15 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuthStore } from '@/store/authStore';
-import colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import Button from '@/components/Button';
-import { Mail, ArrowLeft } from 'lucide-react-native';
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
 export default function EmailVerificationScreen() {
   const router = useRouter();
+  const colors = useTheme();
   const { email } = useLocalSearchParams<{ email: string }>();
   const { verifyOTP, resendOTP, isLoading, error, clearError } = useAuthStore();
   
@@ -86,27 +87,27 @@ export default function EmailVerificationScreen() {
   
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={styles.container}>
-        <StatusBar style="light" />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <StatusBar style={colors.background === '#000000' ? 'light' : 'dark'} />
         
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <ArrowLeft size={24} color={colors.text} />
+          <MaterialCommunityIcons name="arrow-left" size={24} color={colors.text} />
         </TouchableOpacity>
         
         <View style={styles.content}>
-          <View style={styles.iconContainer}>
-            <Mail size={48} color={colors.primary} />
+          <View style={[styles.iconContainer, { backgroundColor: colors.lightGray }]}>
+            <MaterialCommunityIcons name="email-outline" size={48} color={colors.primary} />
           </View>
           
-          <Text style={styles.title}>Verify Your Email</Text>
-          <Text style={styles.description}>
+          <Text style={[styles.title, { color: colors.text }]}>Verify Your Email</Text>
+          <Text style={[styles.description, { color: colors.textSecondary }]}>
             We&apos;ve sent a 6-digit verification code to{' '}
-            <Text style={styles.email}>{email}</Text>
+            <Text style={[styles.email, { color: colors.primary }]}>{email}</Text>
           </Text>
           
           <View style={styles.codeInputContainer}>
             <TextInput
-              style={styles.codeInput}
+              style={[styles.codeInput, { backgroundColor: colors.lightGray, color: colors.text }]}
               value={code}
               onChangeText={setCode}
               placeholder="Enter 6-digit code"
@@ -129,7 +130,7 @@ export default function EmailVerificationScreen() {
           />
           
           <View style={styles.resendContainer}>
-            <Text style={styles.resendText}>Didn&apos;t receive the code?</Text>
+            <Text style={[styles.resendText, { color: colors.textSecondary }]}>Didn&apos;t receive the code?</Text>
             <TouchableOpacity 
               onPress={handleResendCode}
               disabled={resendCooldown > 0 || isLoading}
@@ -137,7 +138,8 @@ export default function EmailVerificationScreen() {
             >
               <Text style={[
                 styles.resendButtonText,
-                (resendCooldown > 0 || isLoading) && styles.resendButtonTextDisabled
+                { color: colors.primary },
+                (resendCooldown > 0 || isLoading) && { color: colors.mediumGray }
               ]}>
                 {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Code'}
               </Text>
@@ -152,7 +154,6 @@ export default function EmailVerificationScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
     padding: 24,
   },
   backButton: {
@@ -174,7 +175,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'rgba(26, 26, 26, 0.8)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 32,
@@ -182,19 +182,16 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: colors.text,
     marginBottom: 16,
     textAlign: 'center',
   },
   description: {
     fontSize: 16,
-    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: 40,
   },
   email: {
-    color: colors.primary,
     fontWeight: '600',
   },
   codeInputContainer: {
@@ -202,11 +199,9 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   codeInput: {
-    backgroundColor: '#1A1A1A',
     borderRadius: 12,
     padding: 20,
     fontSize: 24,
-    color: colors.text,
     textAlign: 'center',
     letterSpacing: 8,
     fontWeight: '600',
@@ -220,7 +215,6 @@ const styles = StyleSheet.create({
   },
   resendText: {
     fontSize: 14,
-    color: colors.textSecondary,
     marginBottom: 8,
   },
   resendButton: {
@@ -229,10 +223,6 @@ const styles = StyleSheet.create({
   },
   resendButtonText: {
     fontSize: 14,
-    color: colors.primary,
     fontWeight: '600',
-  },
-  resendButtonTextDisabled: {
-    color: colors.mediumGray,
   },
 });

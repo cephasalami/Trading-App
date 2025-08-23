@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Contact } from '@/types/profile';
 import { useRouter } from 'expo-router';
 import colors from '@/constants/colors';
-import { ChevronRight } from 'lucide-react-native';
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 interface ContactListItemProps {
   contact: Contact;
@@ -51,7 +51,7 @@ export default function ContactListItem({ contact }: ContactListItemProps) {
         )}
       </View>
       
-      <ChevronRight size={20} color="#CCCCCC" />
+      <MaterialCommunityIcons name="chevron-right" size={20} color="#CCCCCC" />
     </TouchableOpacity>
   );
 }
